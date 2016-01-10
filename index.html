@@ -1,27 +1,102 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="style.css">
     <script src="jquery.js"></script>
     <script src="data_generator.js"></script>
+    <script src="moment.min.js"></script>
+    <script src="livestamp.min.js"></script>
   </head>
   <body>
+    <div class="container-fluid">
+      <div class="row header-bar navbar-fixed-top">
+        <div class="col-md-12 ">
+          <h1 class="text-center text-uppercase">Twitler</h1>
+        </div>
+      </div>
+      <div class="row main-body">
+        <div class="col-md-3 filter">
+          <h3>View by User</h3>
+          <nav class="users">
+            <ul class="list-unstyled">
+            </ul>
+          </nav>
+        </div>
+
+        <div class="col-md-6">
+          <section class="tweets">
+          </section>
+        </div>
+
+        <div class="col-md-3">
+        </div>
+      <div>
+    </div>
     <script>
 
       $(document).ready(function(){
-        var $body = $('body');
-        $body.html('');
+        var $section = $('section.tweets');
+        $section.html('');
 
         var index = streams.home.length - 1;
-        while(index >= 0){
-          var tweet = streams.home[index];
-          var $tweet = $('<div></div>');
-          $tweet.text('@' + tweet.user + ': ' + tweet.message);
-          $tweet.appendTo($body);
-          index -= 1;
+        var newIndex = streams.home.length - 1;
+        var counter = 0;
+        var userId = 'all-users';
+        
+        // Create buttons to filter twittles by user
+        var nav = $('nav.users ul');
+        $('<li><a class="list-unstyled user" id="all-users">' + 'All Users' + '</a></li>').appendTo( $(nav) );
+        for (var key in streams.users){
+          $('<li><a class="list-unstyled user" id="' + key + '" href=# >' + key + '</a></li>').appendTo( $(nav) );
         }
 
+        // Add the latest set of twittles to the page
+        var prependTweet = function(i){
+          var tweet = streams.home[i];
+          var $tweet = $('<div class="twittle"></div>');
+          $tweet.append('<p>@' + '<a class="user" id="' + tweet.user + '" href=#>' + tweet.user + '</a>' + ': ' + tweet.message + '</p>')
+          $tweet.append('<p>-  twittled <abbr class="timeago" data-livestamp="' + tweet.created_at + '">' + tweet.created_at.toDateString() + '</time></p>');
+          $tweet.prependTo($section);
+        };
+        
+        // Add first 10 tweets to page on page load
+        while(counter <= index){
+          prependTweet(counter);
+          counter++;
+        }
+
+        // Check for new tweets every 60 seconds and add them to the page
+        setInterval(function(){
+          newIndex = streams.home.length - 1;
+          if (newIndex > index) {
+            var counter = index + 1;
+            while (counter <= newIndex){
+              if ( (userId === streams.home[counter]['user']) || (userId === 'all-users') ){
+                prependTweet(counter);
+              } 
+              counter++;
+            }
+            index = newIndex;
+          }
+        }, 15000);
+
+        // Filter list of twittles by user when username is clicked
+        $('a.user').on('click', function(){
+          userId = $(this).attr('id'); 
+          $section.html('');
+          for (var i = 0; i <= newIndex; i++){
+            if ( (userId === streams.home[i]['user']) || (userId === 'all-users') ){
+              prependTweet(i);
+            } 
+          }
+        });
       });
 
     </script>
+
   </body>
 </html>
+
+
+
